@@ -34,7 +34,7 @@
           "systemctl is-enabled nginx.service",
           "sudo touch /var/www/html/index.html",
           "sudo chmod 666 /var/www/html/index.html",
-          "sudo echo 'Hello, Shaaaaaauuuuunnnniiiiiiiiiii <3 Okii, Merci, Daaaggg' > /var/www/html/index.html"
+          "sudo echo 'Hello, world!' > /var/www/html/index.html"
       ],
       "type": "shell",
       "inline_shebang": "/bin/bash -xe" 
