@@ -10,12 +10,12 @@ output "linux_virtual_machine" {
 
 
 output "virtual_machine_admin_user_name" {
-  description = "Username of the michines"
+  description = "Username of the machines"
   value       = var.username
 
 }
 
 output "password" {
-  sensitive = true
+  description = "password for the admin account"
   value     = var.password
 }

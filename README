@@ -30,7 +30,7 @@ packer build -var client_id="<azure-client-id>" -var client_secret="<azure-clien
 ```shell
 terraform validate 
 ```
-
+> It`s posssible to change all the values in the variables.tf, just pass the desired values in the command line, see below
 > run terraform plan to see what will be created
 ```shell
 terraform plan -var 'username=<username>' -var 'password=<passwd>' -var 'machine_count=<number_of_machine_count>' -out=solution.plan
