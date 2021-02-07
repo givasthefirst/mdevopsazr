@@ -11,16 +11,16 @@ variable "location" {
 variable "username" {
   description = "The username"
   default     = "jhon"
-
 }
 
 variable "password" {
   description = "The password to be used in the machine_count"
+  default = ";$W+cD?Be=U3T}*x"
 }
 
 variable "machine_count" {
   description = "amount of machine_count"
   type        = number
-  default     = "1"
+  default     = "2"
 }
 
