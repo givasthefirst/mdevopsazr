@@ -1,3 +1,0 @@
-az policy definition create --name NoResourceWithoutTag \
-    --mode Indexed --rules "{ \"if\": { \"field\": \"tags\", \"exists\": \"false\" }, \
-        \"then\": { \"effect\": \"deny\" } }"
