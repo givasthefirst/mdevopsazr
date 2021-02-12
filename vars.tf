@@ -5,7 +5,7 @@ variable "prefix" {
 
 variable "project_name" {
   description = "name of the project to be used as a tag"
-  default     = "mdevopsazr"
+  default     = "Azure Infrastructure Operations Project"
 }
 
 variable "location" {

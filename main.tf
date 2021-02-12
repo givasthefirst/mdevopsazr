@@ -1,3 +1,7 @@
+provider "azurerm" {
+  features {}
+}
+
 # Create resource group to deploy all resources
 resource "azurerm_resource_group" "main" {
   name     = "udacity-resources"
@@ -113,4 +117,139 @@ resource "azurerm_virtual_machine_data_disk_attachment" "main" {
   virtual_machine_id = azurerm_linux_virtual_machine.main[count.index].id
   lun                = "10"
   caching            = "ReadWrite"
+}
+
+# Create public ip
+resource "azurerm_public_ip" "lb_public_ip" {
+  name                = "lb-public-ip"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  tags = {
+    main_tag = var.project_name
+  }
+}
+
+# Create Standard load balancer
+resource "azurerm_lb" "main" {
+  name                = "udacity-lb"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku                 = "Standard"
+
+  frontend_ip_configuration {
+    name                 = "PublicIPAddress"
+    public_ip_address_id = azurerm_public_ip.lb_public_ip.id
+  }
+
+  tags = {
+    main_tag = var.project_name
+  }
+}
+
+# Create load balancer address pool
+resource "azurerm_lb_backend_address_pool" "main" {
+  loadbalancer_id = azurerm_lb.main.id
+  name            = "BackEndAddressPool"
+}
+
+# Associate network interface to backend address pool
+resource "azurerm_network_interface_backend_address_pool_association" "main" {
+  network_interface_id    = azurerm_network_interface.main[count.index].id
+  count                   = var.machine_count
+  ip_configuration_name   = "udacity"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.main.id
+}
+
+# Create load balancer rule
+# Map the requests received from the internet to the vms, from port to port
+resource "azurerm_lb_rule" "main" {
+  resource_group_name            = azurerm_resource_group.main.name
+  loadbalancer_id                = azurerm_lb.main.id
+  name                           = "http"
+  protocol                       = "Tcp"
+  frontend_port                  = 80
+  backend_port                   = 80
+  backend_address_pool_id        = azurerm_lb_backend_address_pool.main.id
+  frontend_ip_configuration_name = "PublicIPAddress"
+  probe_id                       = azurerm_lb_probe.main.id
+  disable_outbound_snat          = true
+}
+
+# Create Outbound rule for load balancer 
+resource "azurerm_lb_outbound_rule" "main" {
+  resource_group_name     = azurerm_resource_group.main.name
+  loadbalancer_id         = azurerm_lb.main.id
+  name                    = "OutboundRule"
+  protocol                = "All"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.main.id
+
+  frontend_ip_configuration {
+    name = "PublicIPAddress"
+  }
+}
+
+# Create health probe to check if the app is healthy
+resource "azurerm_lb_probe" "main" {
+  resource_group_name = azurerm_resource_group.main.name
+  loadbalancer_id     = azurerm_lb.main.id
+  name                = "http-check"
+  port                = 80
+  protocol            = "Http"
+  request_path        = "/index.html"
+  interval_in_seconds = 5
+  number_of_probes    = 2
+}
+
+# Create security group to secure network connections
+resource "azurerm_network_security_group" "security_group" {
+  name                = "UdacityCourseSecurityGroup"
+  location            = "westeurope"
+  resource_group_name = azurerm_resource_group.main.name
+
+  # Deny traffic to/from the internet
+  security_rule {
+    name                       = "DenyAccessFromTheInternet"
+    priority                   = 1002
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  # Allow traffic within the network
+  security_rule {
+    name                       = "AllowAccessFromTheSubnet"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  # Allow access to the port 80, load balancer and machines are sharing same public ip
+  # makint this rule necessary to access the web page
+  security_rule {
+    name                       = "AllowAccessFromTheInternetInPort80"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = {
+    main_tag = var.project_name
+  }
 }
