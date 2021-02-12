@@ -70,7 +70,7 @@ terraform show
 
 
 ##### Policy assignment
-![Policy Assignment](policy_assignment.png)
+![Policy Assignment](police/policy_assignment.png)
 
 
 ##### Terraform Apply Output
