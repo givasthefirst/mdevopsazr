@@ -1,0 +1,12 @@
+[Unit]
+Description=Hello World Server with simple application
+After=network.target nss-lookup.target
+Documentation=https://github.com/givasthefirst/mdevopsazr/
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/nohup /bin/busybox httpd -f -p 80 -h /home/packer
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
